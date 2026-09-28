@@ -28,10 +28,13 @@ function M.check()
     ok('API key set via setup({ api_key = ... })')
   elseif vim.env.TYPESAFE_API_KEY and vim.env.TYPESAFE_API_KEY ~= '' then
     ok('API key found in $TYPESAFE_API_KEY')
+  elseif vim.env.OPENJEV_API_KEY and vim.env.OPENJEV_API_KEY ~= '' then
+    ok('API key found in $OPENJEV_API_KEY (OpenJEV)')
   else
     warn('no API key', {
-      'export TYPESAFE_API_KEY=... or pass api_key to require("jev").setup().',
-      'Keys live at https://console.typesafe.ai/keys',
+      'export TYPESAFE_API_KEY=... or OPENJEV_API_KEY=..., or pass api_key to require("jev").setup().',
+      'TypeSafe keys: https://console.typesafe.ai/keys',
+      'OpenJEV keys: https://openjev.sh/dashboard',
     })
   end
 
@@ -43,7 +46,8 @@ function M.check()
     err('the action catalog is empty')
   end
 
-  ok(string.format('model %s at %s', config.options.model, config.options.url))
+  local resolved = config.resolve()
+  ok(string.format('provider %s, model %s at %s', resolved.provider, resolved.model, resolved.url))
 end
 
 return M

@@ -1,4 +1,5 @@
----@brief Async POST to TypeSafe's System One endpoint, via `curl` and |vim.system()|.
+---@brief Async POST to the System One endpoint (TypeSafe or OpenJEV), via `curl`
+---and |vim.system()|.
 ---
 --- No retries: a panel that drops a request is better than one that queues them.
 --- `M.post` is a plain module field so tests can swap in a fake.
@@ -8,15 +9,28 @@ local uv = vim.uv or vim.loop
 local M = {}
 
 --- Human-readable first halves of the error string, by HTTP status.
+--- `{P}` is replaced with the provider label (TypeSafe / OpenJEV).
 local REASONS = {
-  [400] = 'TypeSafe rejected the request.',
-  [401] = 'TypeSafe did not accept that API key.',
-  [403] = 'TypeSafe refused that API key.',
-  [404] = 'TypeSafe has no such endpoint.',
-  [422] = 'TypeSafe rejected the questions.',
-  [429] = 'Rate limited by TypeSafe. Slow down for a moment.',
-  [529] = 'TypeSafe is overloaded. Try again shortly.',
+  [400] = '{P} rejected the request.',
+  [401] = '{P} did not accept that API key.',
+  [403] = '{P} refused that API key.',
+  [404] = '{P} has no such endpoint.',
+  [422] = '{P} rejected the questions.',
+  [429] = 'Rate limited by {P}. Slow down for a moment.',
+  [503] = '{P} is overloaded. Try again shortly.',
+  [529] = '{P} is overloaded. Try again shortly.',
 }
+
+--- Display label for the provider in user-facing errors.
+---@param opts table
+---@return string
+local function label_of(opts)
+  local p = opts.provider
+  if type(p) == 'string' and p == 'openjev' then
+    return 'OpenJEV'
+  end
+  return 'TypeSafe'
+end
 
 --- Split curl's `-w "\n%{http_code}"` tail off the response body.
 ---@param stdout string
@@ -133,7 +147,12 @@ function M.post(opts, body, cb)
     local ok_decode, decoded = pcall(vim.json.decode, raw)
 
     if not status or status < 200 or status >= 300 then
-      local reason = REASONS[status] or string.format('TypeSafe returned %s.', tostring(status))
+      local reason = REASONS[status]
+      if reason then
+        reason = reason:gsub('{P}', label_of(opts))
+      else
+        reason = string.format('%s returned %s.', label_of(opts), tostring(status))
+      end
       local detail = ok_decode and detail_of(decoded) or ''
       if detail == '' then
         detail = oneline(raw, 120)
@@ -143,7 +162,7 @@ function M.post(opts, body, cb)
     end
 
     if not ok_decode or type(decoded) ~= 'table' then
-      finish('invalid JSON from TypeSafe: ' .. oneline(raw, 120))
+      finish('invalid JSON from ' .. label_of(opts) .. ': ' .. oneline(raw, 120))
       return
     end
 

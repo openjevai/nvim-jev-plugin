@@ -19,6 +19,8 @@ into a call and applies a policy to it. Nothing is generated.
 Ported from [sdras/jev-webmcp-extension](https://github.com/sdras/jev-webmcp-extension),
 which does the same thing for WebMCP tools in a browser side panel.
 
+> **OpenJEV support:** Jev is built by [TypeSafe](https://typesafe.ai). This fork keeps TypeSafe as the default and adds optional support for [OpenJEV](https://openjev.sh), a free community gateway to the same Jev model — set `OPENJEV_API_KEY` (or `JEV_PROVIDER=openjev`) to use it. Original project: https://github.com/balazsorban44/nvim-jev-plugin by @balazsorban44.
+
 ## Screenshots
 
 ![The jev panel after asking for a vertical split](assets/01-split.png)
@@ -69,6 +71,11 @@ Requirements: Neovim >= 0.10, `curl`, and a TypeSafe API key from
 [console.typesafe.ai/keys](https://console.typesafe.ai/keys). Export it as
 `TYPESAFE_API_KEY` and you are done; `opts = {}` is enough.
 
+To use [OpenJEV](https://openjev.sh) instead, export `OPENJEV_API_KEY` (from
+[openjev.sh/dashboard](https://openjev.sh/dashboard)) — or set
+`JEV_PROVIDER=openjev`. TypeSafe stays the default, so a TypeSafe key wins
+when both are present.
+
 ## Setup
 
 Every option, with its default:
@@ -76,6 +83,7 @@ Every option, with its default:
 ```lua
 require('jev').setup({
   api_key = nil,          -- else $TYPESAFE_API_KEY, read at request time
+  provider = nil,         -- 'typesafe' (default) or 'openjev'; else $JEV_PROVIDER
   model = 'jev-latest',
   url = 'https://api.typesafe.ai/v1/systemone',
   timeout_ms = 15000,
@@ -85,6 +93,13 @@ require('jev').setup({
   thresholds = { route = 0.5, auto = 0.8, confirm = 0.6 },
 })
 ```
+
+`provider` auto-selects when nil: TypeSafe if `TYPESAFE_API_KEY` (or `api_key`)
+is set, otherwise OpenJEV if only `OPENJEV_API_KEY` is set. Set `'openjev'` or
+`'typesafe'` to force one, or export `JEV_PROVIDER`. When OpenJEV is selected
+and `model`/`url` are left at their defaults, requests go to
+`https://api.openjev.sh/v1/systemone` with model `openjev`. TypeSafe remains
+the default — anyone with a TypeSafe key sees no change.
 
 ## Commands
 

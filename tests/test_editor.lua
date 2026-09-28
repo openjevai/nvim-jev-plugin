@@ -546,6 +546,7 @@ describe('ask', function()
     reset()
     jev.setup({ api_key = nil })
     vim.env.TYPESAFE_API_KEY = nil
+    vim.env.OPENJEV_API_KEY = nil
     local called = false
     client.post = function()
       called = true
@@ -554,7 +555,7 @@ describe('ask', function()
     eq(called, false, 'no request was attempted')
     local line = line_with('no API key')
     ok(line, 'the missing-key line was printed')
-    eq(line, '  error: no API key — set api_key in setup() or export TYPESAFE_API_KEY')
+    eq(line, '  error: no API key — set api_key in setup() or export TYPESAFE_API_KEY / OPENJEV_API_KEY')
   end)
 
   it('surfaces a transport error without throwing', function()

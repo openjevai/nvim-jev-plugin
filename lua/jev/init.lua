@@ -148,9 +148,10 @@ function M.ask(text)
   local cfg = config.get()
   panel.print('you: ' .. text)
 
-  local key = config.api_key()
+  local resolved = config.resolve()
+  local key = resolved.api_key
   if not key then
-    panel.print('  error: no API key — set api_key in setup() or export TYPESAFE_API_KEY')
+    panel.print('  error: no API key — set api_key in setup() or export TYPESAFE_API_KEY / OPENJEV_API_KEY')
     return
   end
 
@@ -169,11 +170,12 @@ function M.ask(text)
 
   require('jev.client').post({
     api_key = key,
-    url = cfg.url,
+    url = resolved.url,
     timeout_ms = cfg.timeout_ms,
+    provider = resolved.provider,
   }, {
     state = text,
-    model = cfg.model,
+    model = resolved.model,
     questions = built.questions,
   }, function(err, resp, ms)
     if seq ~= M._seq then

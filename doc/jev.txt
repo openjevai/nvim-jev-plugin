@@ -30,12 +30,17 @@ CONTENTS                                                       *jev-contents*
     - Neovim 0.10 or newer
     - `curl` on your PATH
     - A TypeSafe API key, from https://console.typesafe.ai/keys
+      (or an OpenJEV key from https://openjev.sh/dashboard)
 
 No other dependencies. Pure Lua.
 
 The key is read from `api_key` in |jev-setup|, and otherwise from the
 `$TYPESAFE_API_KEY` environment variable at request time. It is never
 printed, logged, or written to the panel.
+
+OpenJEV (https://openjev.sh) is a free community gateway to the same Jev
+model. Set `$OPENJEV_API_KEY` (or `JEV_PROVIDER=openjev`) to use it instead;
+TypeSafe stays the default. See |jev-configuration| and `OPENJEV.md`.
 
 ==============================================================================
 2. SETUP                                                          *jev-setup*
@@ -84,6 +89,7 @@ Defaults, in full: >lua
 
     require('jev').setup({
       api_key = nil,          -- else $TYPESAFE_API_KEY
+      provider = nil,         -- 'typesafe' (default) or 'openjev'; else $JEV_PROVIDER
       model = 'jev-latest',
       url = 'https://api.typesafe.ai/v1/systemone',
       timeout_ms = 15000,
@@ -105,6 +111,16 @@ Defaults, in full: >lua
 `model`                 `jev-latest` tracks the newest stable release, so the
                         answers behind it can move. Pin a versioned id such
                         as `jev-1.13.0` if you have tuned thresholds.
+
+`provider`              `nil` (the default) auto-selects: TypeSafe when
+                        `$TYPESAFE_API_KEY` (or `api_key`) is set, otherwise
+                        OpenJEV when only `$OPENJEV_API_KEY` is set. Set
+                        `'openjev'` or `'typesafe'` to force one, or export
+                        `$JEV_PROVIDER`. When OpenJEV is selected and `model`
+                        and `url` are left at their defaults, the request is
+                        sent to `https://api.openjev.sh/v1/systemone` with
+                        model `openjev`. TypeSafe remains the default; anyone
+                        with a TypeSafe key sees no change.
 
 ==============================================================================
 5. ACTIONS                                                      *jev-actions*
